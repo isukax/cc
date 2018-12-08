@@ -21,5 +21,6 @@ try()
 # テスト
 try 0 0
 try 42 42
+try 52 '5+47-0'
 
 echo OK
