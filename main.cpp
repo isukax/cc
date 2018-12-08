@@ -1,5 +1,64 @@
 #include <iostream>
 #include <stdlib.h>
+#include <string>
+
+enum 
+{
+    TK_NUM = 256,   // 整数
+    TK_EOF,    
+};
+
+struct Token
+{
+    int type;       // トークン型
+    long value;    
+    char* input;    
+};
+
+Token tokens[100];
+
+void Tokenize(char* p)
+{
+    int i = 0;
+    while(*p)
+    {
+        if(isspace(*p))
+        {
+            ++p;
+            continue;
+        }
+
+        if(*p == '+' || *p == '-')
+        {
+            tokens[i].type = *p;
+            tokens[i].input = p;
+            ++i;
+            ++p;
+            continue;
+        }
+
+        if(isdigit(*p))
+        {
+            tokens[i].type = TK_NUM;
+            tokens[i].input = p;
+            tokens[i].value = strtol(p, &p, 10);
+            ++i;
+            continue;
+        }
+
+        fprintf(stderr, "invalid token: %s\n", p);
+        exit(-1);
+    }
+
+    tokens[i].type = TK_EOF;
+    tokens[i].input = p;
+}
+
+void error(int i)
+{
+    fprintf(stderr, "error token: %s\n", tokens[i].input);
+    exit(-1);
+}
 
 int main(int argc, char** argv)
 {
@@ -9,31 +68,37 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    char* p = argv[1];
+    Tokenize(argv[1]);
 
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
     printf("main:\n");
-    printf("    mov rax, %ld\n", strtol(p, &p, 10));
 
-    while(*p)
+    if(tokens[0].type != TK_NUM) error(0);
+    printf("    mov rax, %ld\n", tokens[0].value);
+
+    uint32_t i = 1;
+    while(tokens[i].type != TK_EOF)
     {
-        if(*p == '+')
+        if(tokens[i].type == '+')
         {
-            ++p;
-            printf("    add rax, %ld\n", strtol(p, &p, 10));
+            ++i;
+            if(tokens[i].type != TK_NUM) error(i);
+            printf("    add rax, %ld\n", tokens[i].value);
+            ++i;
             continue;
         }
 
-        if(*p == '-')
+        if(tokens[i].type == '-')
         {
-            ++p;
-            printf("    sub rax, %ld\n", strtol(p, &p, 10));
+            ++i;
+            if(tokens[i].type != TK_NUM) error(i);
+            printf("    sub rax, %ld\n", tokens[i].value);
+            ++i;
             continue;
         }
 
-        fprintf(stderr, "invalid string: '%c'\n", *p);
-        return -1;
+        error(i);
     }
 
     printf("    ret\n");
