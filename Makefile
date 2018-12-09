@@ -4,4 +4,4 @@ test: main
 	./test.sh
 
 clean:
-	rm -f main *.o *~ tmp*
+	rm -f main *.o *~ tmp* *.out
