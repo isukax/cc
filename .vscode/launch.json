@@ -8,15 +8,15 @@
             "name": "(gdb) Bash on Windows Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/main",
-            "args": ["1+2+3"],
+            "program": "/mnt/e/github/cc/main",
+            "args": [1+2+3],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "/mnt/e/github/cc/",
             "environment": [],
             "externalConsole": true,
             "pipeTransport": {
                 "debuggerPath": "/usr/bin/gdb",
-                "pipeProgram": "${env:windir}\\system32\\bash.exe",
+                "pipeProgram": "C:\\Windows\\System32\\bash.exe",
                 "pipeArgs": ["-c"],
                 "pipeCwd": ""
             },
@@ -24,9 +24,12 @@
                 {
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
+                    "ignoreFailures": false
                 }
-            ]
-        },
+            ],
+            "sourceFileMap": {
+                "/mnt/e": "e:\\"
+            }
+        }
     ]
 }
