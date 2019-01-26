@@ -9,7 +9,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/mnt/e/github/cc/main",
-            "args": [1+2+3],
+            "args": [
+                "1+2+3"
+            ],
             "stopAtEntry": false,
             "cwd": "/mnt/e/github/cc/",
             "environment": [],
@@ -17,7 +19,9 @@
             "pipeTransport": {
                 "debuggerPath": "/usr/bin/gdb",
                 "pipeProgram": "C:\\Windows\\System32\\bash.exe",
-                "pipeArgs": ["-c"],
+                "pipeArgs": [
+                    "-c"
+                ],
                 "pipeCwd": ""
             },
             "setupCommands": [
@@ -30,6 +34,7 @@
             "sourceFileMap": {
                 "/mnt/e": "e:\\"
             }
+            "preLaunchTask": "Build (C++)"
         }
     ]
 }

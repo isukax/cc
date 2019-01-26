@@ -11,9 +11,13 @@
             },
             "command": "g++",
             "args": [
+                "-Wall",
                 "-g",
+                "-O0",
                 "`wslpath",
-                "'${workspaceFolder}/main.cpp'`"
+                "'${workspaceFolder}\\main.cpp'`",
+                "-o",
+                "main"
             ],
             "group": "build",
             "presentation": {
@@ -37,8 +41,8 @@
             "command": "make",
             "args": ["test"],
             "group": {
-                "kind": "build",
-                // "kind": "test",
+                // "kind": "build",
+                "kind": "test",
                 "isDefault": true
             },
             "presentation": {

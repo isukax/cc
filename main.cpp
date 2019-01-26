@@ -2,7 +2,39 @@
 #include <stdlib.h>
 #include <string>
 
-enum 
+enum class NodeType
+{
+    Number,
+};
+
+struct Node
+{
+    NodeType type;
+    Node *lhs;
+    Node *rhs;
+    int value;
+};
+
+Node* CreateNode(NodeType type, Node* lhs, Node* rhs)
+{
+    Node *node = new Node();
+    node->type = type;
+    node->lhs = lhs;
+    node->rhs = rhs;
+    return node;
+}
+
+Node* CreateNodeNumber(int value)
+{
+    Node *node = new Node();
+    node->type = NodeType::Number;
+    node->value = value;
+    return node;
+}
+
+
+
+enum TokenType 
 {
     TK_NUM = 256,   // 整数
     TK_EOF,    
@@ -10,7 +42,7 @@ enum
 
 struct Token
 {
-    int type;       // トークン型
+    int type; // トークン型
     long value;    
     char* input;    
 };
