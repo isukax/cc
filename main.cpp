@@ -2,20 +2,20 @@
 #include <stdlib.h>
 #include <string>
 
-enum class NodeType
+enum NodeType
 {
-    Number,
+    ND_NUM,
 };
 
 struct Node
 {
-    NodeType type;
+    int type;
     Node *lhs;
     Node *rhs;
     int value;
 };
 
-Node* CreateNode(NodeType type, Node* lhs, Node* rhs)
+Node* CreateNode(int type, Node* lhs, Node* rhs)
 {
     Node *node = new Node();
     node->type = type;
@@ -27,7 +27,7 @@ Node* CreateNode(NodeType type, Node* lhs, Node* rhs)
 Node* CreateNodeNumber(int value)
 {
     Node *node = new Node();
-    node->type = NodeType::Number;
+    node->type = NodeType::ND_NUM;
     node->value = value;
     return node;
 }
@@ -48,6 +48,7 @@ struct Token
 };
 
 Token tokens[100];
+int pos = 0;
 
 void Tokenize(char* p)
 {
@@ -60,7 +61,7 @@ void Tokenize(char* p)
             continue;
         }
 
-        if(*p == '+' || *p == '-')
+        if(*p == '+' || *p == '-' || *p == '*' || *p == '/')
         {
             tokens[i].type = *p;
             tokens[i].input = p;
@@ -92,9 +93,88 @@ void error(int i)
     exit(-1);
 }
 
-int main(int argc, char** argv)
+bool consume(int ty)
 {
-    if(argc != 2)
+    if(tokens[pos].type != ty)
+    {
+        return false;
+    }
+    pos++;
+    return true;
+}
+
+Node *term();
+Node *mul();
+Node *expr()
+{
+    Node *node = mul();
+
+    for (;;)
+    {
+        if(consume('+'))
+        {
+            node = CreateNode('+', node, mul());
+        }
+        else if(consume('-'))
+        {
+            node = CreateNode('-', node, mul());
+        }
+        else
+        {
+            return node;
+        }
+        
+
+    }
+}
+
+Node* mul()
+{
+    Node *node = term();
+
+    for (;;)
+    {
+        if(consume('*'))
+        {
+            node = CreateNode('*', node, term());
+        }
+        else if(consume('/'))
+        {
+            node = CreateNode('/', node, term());
+        }
+        else
+        {
+            return node;
+        }
+        
+    }
+}
+
+Node* term()
+{
+    if(consume('('))
+    {
+        Node *node = expr();
+        if(!consume(')'))
+        {
+            error(pos);
+        }
+        return node;
+    }
+
+    if (tokens[pos].type == TokenType::TK_NUM)
+    {
+        return CreateNodeNumber(tokens[pos++].value);
+    }
+    error(pos);
+    return nullptr;
+}
+
+
+
+int main(int argc, char **argv)
+{
+    if (argc != 2)
     {
         fprintf(stderr, "argc is invalid.");
         return -1;
@@ -102,29 +182,33 @@ int main(int argc, char** argv)
 
     Tokenize(argv[1]);
 
+    Node *node = expr();
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
     printf("main:\n");
 
-    if(tokens[0].type != TK_NUM) error(0);
+    if (tokens[0].type != TK_NUM)
+        error(0);
     printf("    mov rax, %ld\n", tokens[0].value);
 
     uint32_t i = 1;
-    while(tokens[i].type != TK_EOF)
+    while (tokens[i].type != TK_EOF)
     {
-        if(tokens[i].type == '+')
+        if (tokens[i].type == '+')
         {
             ++i;
-            if(tokens[i].type != TK_NUM) error(i);
+            if (tokens[i].type != TK_NUM)
+                error(i);
             printf("    add rax, %ld\n", tokens[i].value);
             ++i;
             continue;
         }
 
-        if(tokens[i].type == '-')
+        if (tokens[i].type == '-')
         {
             ++i;
-            if(tokens[i].type != TK_NUM) error(i);
+            if (tokens[i].type != TK_NUM)
+                error(i);
             printf("    sub rax, %ld\n", tokens[i].value);
             ++i;
             continue;

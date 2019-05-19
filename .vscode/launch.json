@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "/mnt/e/github/cc/main",
             "args": [
-                "1+2+3"
+                "1+2*3"
             ],
             "stopAtEntry": false,
             "cwd": "/mnt/e/github/cc/",
