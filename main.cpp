@@ -104,6 +104,7 @@ bool consume(int ty)
 }
 
 Node *term();
+Node *unary();
 Node *mul();
 Node *expr()
 {
@@ -130,17 +131,17 @@ Node *expr()
 
 Node* mul()
 {
-    Node *node = term();
+    Node *node = unary();
 
     for (;;)
     {
         if(consume('*'))
         {
-            node = CreateNode('*', node, term());
+            node = CreateNode('*', node, unary());
         }
         else if(consume('/'))
         {
-            node = CreateNode('/', node, term());
+            node = CreateNode('/', node, unary());
         }
         else
         {
@@ -148,6 +149,19 @@ Node* mul()
         }
         
     }
+}
+
+Node* unary()
+{
+    if(consume('+'))
+    {
+        return term();
+    }
+    else if(consume('-'))
+    {
+        return CreateNode('-', CreateNodeNumber(0), term());
+    }
+    return term();
 }
 
 Node* term()
