@@ -86,7 +86,7 @@ void Tokenize(char *p)
             tokens[i].type = TK_EQ;
             tokens[i].input = p;
             ++i;
-            p+=2;
+            p += 2;
             continue;
         }
 
@@ -99,7 +99,25 @@ void Tokenize(char *p)
             continue;
         }
 
-        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')')
+        if (!strncmp(p, "<=", 2))
+        {
+            tokens[i].type = TK_LE;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+
+        if (!strncmp(p, ">=", 2))
+        {
+            tokens[i].type = TK_GE;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' || *p == '>' || *p == '<')
         {
             tokens[i].type = *p;
             tokens[i].input = p;
@@ -149,24 +167,24 @@ Node *relational();
 Node *equality();
 Node *expr();
 
-// Node* expr()
-// {
-
-// }
-
-Node *expr()
+Node* expr()
 {
-    Node *node = add();
+    return equality();
+}
+
+Node *equality()
+{
+    Node *node = relational();
 
     for (;;)
     {
         if (consume(TK_EQ))
         {
-            node = CreateNode(TK_EQ, node, add());
+            node = CreateNode(TK_EQ, node, relational());
         }
-        else if(consume(TK_NE))
+        else if (consume(TK_NE))
         {
-            node = CreateNode(TK_NE, node, add());
+            node = CreateNode(TK_NE, node, relational());
         }
         else
         {
@@ -175,15 +193,34 @@ Node *expr()
     }
 }
 
-// Node* relational()
-// {
-//     Node *node = add();
+Node *relational()
+{
+    Node *node = add();
 
-//     for (;;)
-//     {
-//         // if(consume(""))
-//     }
-// }
+    for (;;)
+    {
+        if (consume(TK_LE))
+        {
+            node = CreateNode(TK_LE, node, add());
+        }
+        else if (consume(TK_GE))
+        {
+            node = CreateNode(TK_GE, node, add());
+        }
+        else if (consume('<'))
+        {
+            node = CreateNode('<', node, add());
+        }
+        else if (consume('>'))
+        {
+            node = CreateNode('>', node, add());
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
 
 Node *add()
 {
@@ -285,6 +322,16 @@ void gen(Node *node)
         printf("    setne al\n");
         printf("    movzb rax, al\n");
         break;
+    case TK_LE:
+        printf("    cmp rax, rdi\n");
+        printf("    setle al\n");
+        printf("    movzb rax, al\n");
+        break;
+    case TK_GE:
+        printf("    cmp rax, rdi\n");
+        printf("    setge al\n");
+        printf("    movzb rax, al\n");
+        break;
     case '+':
         printf("    add rax, rdi\n");
         break;
@@ -297,6 +344,16 @@ void gen(Node *node)
     case '/':
         printf("    mov rdx, 0\n");
         printf("    div rdi\n");
+        break;
+    case '<':
+        printf("    cmp rax, rdi\n");
+        printf("    setl al\n");
+        printf("    movzb rax, al\n");
+        break;
+    case '>':
+        printf("    cmp rax, rdi\n");
+        printf("    setg al\n");
+        printf("    movzb rax, al\n");
         break;
     }
 
