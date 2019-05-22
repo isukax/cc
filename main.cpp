@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 
 enum NodeType
 {
@@ -15,7 +16,7 @@ struct Node
     int value;
 };
 
-Node* CreateNode(int type, Node* lhs, Node* rhs)
+Node *CreateNode(int type, Node *lhs, Node *rhs)
 {
     Node *node = new Node();
     node->type = type;
@@ -24,7 +25,7 @@ Node* CreateNode(int type, Node* lhs, Node* rhs)
     return node;
 }
 
-Node* CreateNodeNumber(int value)
+Node *CreateNodeNumber(int value)
 {
     Node *node = new Node();
     node->type = NodeType::ND_NUM;
@@ -32,36 +33,73 @@ Node* CreateNodeNumber(int value)
     return node;
 }
 
-
-
-enum TokenType 
+enum TokenType
 {
-    TK_NUM = 256,   // 整数
-    TK_EOF,    
+    TK_NUM = 256, // 整数
+    TK_EQ,
+    TK_NE,
+    TK_LE,
+    TK_GE,
+    TK_EOF,
 };
 
 struct Token
 {
     int type; // トークン型
-    long value;    
-    char* input;    
+    long value;
+    char *input;
 };
 
 Token tokens[100];
 int pos = 0;
 
-void Tokenize(char* p)
+void Tokenize(char *p)
 {
     int i = 0;
-    while(*p)
+    while (*p)
     {
-        if(isspace(*p))
+        if (isspace(*p))
         {
             ++p;
             continue;
         }
 
-        if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')')
+        // switch(*p)
+        // {
+        //     case '=':
+
+        //         break;
+        //     case '!':
+
+        //         break;
+        //     case '<':
+
+        //         break;
+        //     case '>':
+
+        //         break;
+        //     case '0'...'9':
+        //             break;
+        // }
+        if (!strncmp(p, "==", 2))
+        {
+            tokens[i].type = TK_EQ;
+            tokens[i].input = p;
+            ++i;
+            p+=2;
+            continue;
+        }
+
+        if (!strncmp(p, "!=", 2))
+        {
+            tokens[i].type = TK_NE;
+            tokens[i].input = p;
+            ++i;
+            p += 2;
+            continue;
+        }
+
+        if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')')
         {
             tokens[i].type = *p;
             tokens[i].input = p;
@@ -70,7 +108,7 @@ void Tokenize(char* p)
             continue;
         }
 
-        if(isdigit(*p))
+        if (isdigit(*p))
         {
             tokens[i].type = TK_NUM;
             tokens[i].input = p;
@@ -95,7 +133,7 @@ void error(int i)
 
 bool consume(int ty)
 {
-    if(tokens[pos].type != ty)
+    if (tokens[pos].type != ty)
     {
         return false;
     }
@@ -106,17 +144,58 @@ bool consume(int ty)
 Node *term();
 Node *unary();
 Node *mul();
+Node *add();
+Node *relational();
+Node *equality();
+Node *expr();
+
+// Node* expr()
+// {
+
+// }
+
 Node *expr()
+{
+    Node *node = add();
+
+    for (;;)
+    {
+        if (consume(TK_EQ))
+        {
+            node = CreateNode(TK_EQ, node, add());
+        }
+        else if(consume(TK_NE))
+        {
+            node = CreateNode(TK_NE, node, add());
+        }
+        else
+        {
+            return node;
+        }
+    }
+}
+
+// Node* relational()
+// {
+//     Node *node = add();
+
+//     for (;;)
+//     {
+//         // if(consume(""))
+//     }
+// }
+
+Node *add()
 {
     Node *node = mul();
 
     for (;;)
     {
-        if(consume('+'))
+        if (consume('+'))
         {
             node = CreateNode('+', node, mul());
         }
-        else if(consume('-'))
+        else if (consume('-'))
         {
             node = CreateNode('-', node, mul());
         }
@@ -124,22 +203,19 @@ Node *expr()
         {
             return node;
         }
-        
-
     }
 }
 
-Node* mul()
+Node *mul()
 {
     Node *node = unary();
-
     for (;;)
     {
-        if(consume('*'))
+        if (consume('*'))
         {
             node = CreateNode('*', node, unary());
         }
-        else if(consume('/'))
+        else if (consume('/'))
         {
             node = CreateNode('/', node, unary());
         }
@@ -147,29 +223,28 @@ Node* mul()
         {
             return node;
         }
-        
     }
 }
 
-Node* unary()
+Node *unary()
 {
-    if(consume('+'))
+    if (consume('+'))
     {
         return term();
     }
-    else if(consume('-'))
+    else if (consume('-'))
     {
         return CreateNode('-', CreateNodeNumber(0), term());
     }
     return term();
 }
 
-Node* term()
+Node *term()
 {
-    if(consume('('))
+    if (consume('('))
     {
         Node *node = expr();
-        if(!consume(')'))
+        if (!consume(')'))
         {
             error(pos);
         }
@@ -184,9 +259,9 @@ Node* term()
     return nullptr;
 }
 
-void gen(Node* node)
+void gen(Node *node)
 {
-    if(node->type == ND_NUM)
+    if (node->type == ND_NUM)
     {
         printf("    push %d\n", node->value);
         return;
@@ -198,21 +273,31 @@ void gen(Node* node)
     printf("    pop rdi\n");
     printf("    pop rax\n");
 
-    switch(node->type)
+    switch (node->type)
     {
-        case '+':
-            printf("    add rax, rdi\n");
-            break;
-        case '-':
-            printf("    sub rax, rdi\n");
-            break;
-        case '*':
-            printf("    mul rdi\n");
-            break;
-        case '/':
-            printf("    mov rdx, 0\n");
-            printf("    div rdi\n");
-            break;
+    case TK_EQ:
+        printf("    cmp rax, rdi\n");
+        printf("    sete al\n");
+        printf("    movzb rax, al\n");
+        break;
+    case TK_NE:
+        printf("    cmp rax, rdi\n");
+        printf("    setne al\n");
+        printf("    movzb rax, al\n");
+        break;
+    case '+':
+        printf("    add rax, rdi\n");
+        break;
+    case '-':
+        printf("    sub rax, rdi\n");
+        break;
+    case '*':
+        printf("    mul rdi\n");
+        break;
+    case '/':
+        printf("    mov rdx, 0\n");
+        printf("    div rdi\n");
+        break;
     }
 
     printf("    push rax\n");
@@ -229,7 +314,7 @@ int main(int argc, char **argv)
     Tokenize(argv[1]);
 
     Node *node = expr();
-    
+
     printf(".intel_syntax noprefix\n");
     printf(".global main\n");
     printf("main:\n");
@@ -270,6 +355,5 @@ int main(int argc, char **argv)
     printf("    pop rax\n");
     printf("    ret\n");
 #endif
-
     return 0;
 }
